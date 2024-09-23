@@ -1,0 +1,760 @@
+openapi: 3.0.3
+info:
+  title: Ecommerce - Product API
+  contact:
+    email: support@codica.gr
+  version: '1.0'
+servers:
+  - url: https://domain.com/api/v1/ec-product
+tags:
+  - name: ec-product
+    description: Management of products
+  - name: ec-product-category
+    description: Management of product categories
+  - name: ec-product-warehouse
+    description: Management of product's stock
+paths:
+  /ec-product:
+    get:
+      tags:
+        - ec-product
+      summary: Get products bases on query parameters
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of items to return
+          required: true
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: sku
+          schema:
+            type: string
+          description: The product's SKU
+        - in: query
+          name: categoryId
+          schema:
+            type: integer
+          description: The category id the product belongs to
+        - in: query
+          name: enabled
+          schema:
+            type: boolean
+          description: To get only enabled products
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum:
+              - physical
+              - digital
+        - in: query
+          name: mode
+          schema:
+            type: string
+            enum:
+              - standalone
+              - parent
+              - child
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+    post:
+      tags:
+        - ec-product
+      summary: Store a new product
+      description: |-
+        - The 1st id on the categoryIds array will be also the canonical category of that product.
+        - To add extra translations the locale must be supported.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - categoryIds
+                - manufacturerIds
+                - translations
+                - type
+                - mode
+                - sku
+              type: object
+              properties:
+                categoryIds:
+                  type: array
+                  description: The first id becomes also the canonical category
+                  items:
+                    type: integer
+                  example: [1,2]
+                manufacturerIds:
+                  type: array
+                  items:
+                    type: integer
+                  example: [2]
+                translations:
+                  $ref: '#/components/schemas/ProductTranslationsOnRequest'
+                sku:
+                  type: string
+                  example: 'ATT-FF'
+                type:
+                  type: string
+                  enum:
+                    - physical
+                    - digital
+                mode:
+                  type: string
+                  enum:
+                    - standalone
+                    - parent
+                    - child
+                parentId:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+        '422':
+          description: Error performing create || Product created but relations have not been updated
+  /ec-product/{productId}:
+    get:
+      tags:
+        - ec-product
+      summary: Get product
+      parameters:
+        - name: productId
+          in: path
+          description: The product id to get
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+    put:
+      tags:
+        - ec-product
+      summary: Update specified product
+      description: |-
+        - At least one parameter is required on the request body.
+        - The 1st id on the categoryIds array will be also the canonical category of that product.
+        - To add extra translations the locale must be supported.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryIds:
+                  type: array
+                  description: The first id becomes also the canonical category
+                  items:
+                    type: integer
+                  example: [1, 2]
+                manufacturerIds:
+                  type: array
+                  items:
+                    type: integer
+                  example: [2]
+                translations:
+                  $ref: '#/components/schemas/ProductTranslationsOnRequest'
+                sku:
+                  type: string
+                  example: 'ATT-FF'
+              oneOf:
+                - required: ["categoryIds"]
+                - required: ["manufacturerIds"]
+                - required: ["translations"]
+                - required: ["sku"]
+      parameters:
+        - name: productId
+          in: path
+          description: The product id to update
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ['Translations has been updated', 'SKU has been updated.']
+
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+        '422':
+          description: Error updating relations (categoryIds, manufacturerIds)
+    delete:
+      tags:
+        - ec-product
+      summary: Delete specified product
+      parameters:
+        - name: productId
+          in: path
+          description: The product id to delete
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product with id {productId} has been deleted.
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+        '422':
+          description: Unable to delete product.
+  /ec-product-category:
+    get:
+      tags:
+        - ec-product-category
+      summary: Get product categories
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of items to return
+          required: true
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: enabled
+          schema:
+            type: boolean
+          description: To get enabled categories
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product_categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductCategory'
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+  /ec-product-warehouse:
+    get:
+      tags:
+        - ec-product-warehouse
+      summary: Get stock base on query parameters
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of items to return
+          required: true
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: productId
+          schema:
+            type: integer
+          description: To get rows for specific product id
+        - in: query
+          name: warehouseId
+          schema:
+            type: integer
+          description: To get rows for specific warehouse
+        - in: query
+          name: in_stock
+          schema:
+            type: boolean
+          description: To get rows with stock > 0
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stock:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductWarehouse'
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+  /ec-product-warehouse/{productId}/{warehouseId}:
+    put:
+      tags:
+        - ec-product-warehouse
+      summary: Update stock for given product and warehouse
+      parameters:
+        - name: productId
+          in: path
+          description: The stock's productId
+          required: true
+          schema:
+            type: string
+        - name: warehouseId
+          in: path
+          description: The stock's warehouseId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              allOf:
+                - type: string
+                  properties:
+                    stock:
+                      type: integer
+                      example: 3
+                - type: integer
+                  properties:
+                    expected_stock:
+                      $ref: '#/components/schemas/ProductWarehouseExpectedStock'
+      responses:
+        '200':
+          description: Update was successful OR Resource is already up to date..
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
+security:
+  - bearerAuth: []
+components:
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+    MissingAbilityError:
+      description: Token doesn't not have all required abilities
+    ValidatorError:
+      description: The required fields are not present/correct.
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        enabled:
+          type: boolean
+        hidden:
+          type: boolean
+        featured:
+          type: boolean
+        hot:
+          type: boolean
+        discounted:
+          type: boolean
+        type:
+          type: string
+          enum:
+            - physical
+            - digital
+        mode:
+          type: string
+          enum:
+            - standalone
+            - parent
+            - child
+        ec_tax_type_id:
+          type: integer
+          nullable: true
+        ec_product_parent_id:
+          type: integer
+          nullable: true
+        ec_product_category_behavior:
+          type: integer
+          nullable: true
+        sku:
+          type: string
+          nullable: true
+        gtin:
+          type: string
+          nullable: true
+        mpn:
+          type: string
+          nullable: true
+        weight_unit:
+          type: string
+          nullable: true
+        dimensions_unit:
+          type: string
+          nullable: true
+        weight:
+          type: number
+          format: double
+          nullable: true
+        advanced_weight:
+          type: object
+          nullable: true
+        length:
+          type: number
+          format: double
+          nullable: true
+        width:
+          type: number
+          format: double
+          nullable: true
+        height:
+          type: number
+          format: double
+          nullable: true
+        package_weight:
+          type: number
+          format: double
+          nullable: true
+        units_in_box:
+          type: string
+          nullable: true
+        stock_control_status:
+          type: string
+          nullable: true
+        stock_control_mode:
+          type: string
+          nullable: true
+        product_with_zero_price:
+          type: string
+          nullable: true
+        send_low_stock_notification:
+          type: boolean
+        low_stock_notification:
+          type: integer
+          nullable: true
+        purchase_quantity_steps:
+          type: integer
+          nullable: true
+        minimum_purchase_quantity:
+          type: integer
+          nullable: true
+        maximum_purchase_quantity:
+          type: integer
+          nullable: true
+        og_image:
+          type: string
+          nullable: true
+        robots:
+          type: string
+          nullable: true
+        hits:
+          type: integer
+        ec_availability_overwrite:
+          type: boolean
+        out_of_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        low_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        medium_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        in_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        max_medium_stock_availability:
+          type: integer
+          nullable: true
+        max_low_stock_availability:
+          type: integer
+          nullable: true
+        translations:
+          $ref: '#/components/schemas/ProductTranslations'
+        categoryIds:
+          type: array
+          items:
+            type: integer
+          example: [1,2]
+        canonicalCategoryId:
+          type: integer
+        manufacturerIds:
+          type: array
+          items:
+            type: integer
+          example: [2]
+        media:
+          $ref: '#/components/schemas/ProductMedia'
+        stock:
+          $ref: '#/components/schemas/ProductWarehouse'
+        prices:
+          $ref: '#/components/schemas/ProductPrice'
+    ProductMedia:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        type:
+          type: string
+        order:
+          type: integer
+        group:
+          type: string
+        id:
+          type: integer
+    ProductTranslations:
+      type: object
+      properties:
+        locale:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "locale's title"
+            alias:
+              type: string
+              example: "locale-title"
+            short_description:
+              type: string
+              nullable: true
+            long_description:
+              type: string
+              nullable: true
+            meta_description:
+              type: string
+              nullable: true
+            browser_page_title:
+              type: string
+              nullable: true
+    ProductTranslationsOnRequest:
+      type: object
+      properties:
+        el:
+          description: the locale must me supported
+          type: object
+          properties:
+            title:
+              type: string
+              example: "A Greek Title"
+            short_description:
+              type: string
+              nullable: true
+              example: "A Greek Short Description"
+            long_description:
+              type: string
+              example: "A Greek Long Description"
+              nullable: true
+    ProductPrice:
+      type: object
+      properties:
+        id:
+          type: integer
+        enabled:
+          type: boolean
+        hidden:
+          type: boolean
+        value:
+          type: number
+          format: float
+        override_price:
+          type: number
+          format: float
+        enable_override_price:
+          type: boolean
+        order:
+          type: integer
+        ec_shopper_category_id:
+          type: integer
+          nullable: true
+        ec_product_id:
+          type: integer
+        ec_currency_id:
+          type: integer
+        currency_id:
+          type: integer
+        tax_value:
+          type: number
+          format: float
+        base_price:
+          type: number
+          format: float
+        base_price_with_tax:
+          type: number
+          format: float
+        discount_value:
+          type: number
+          format: float
+        discount_value_with_tax:
+          type: number
+          format: float
+        discount_percentage:
+          type: number
+          format: float
+        final_price:
+          type: number
+          format: float
+        final_price_with_tax:
+          type: number
+          format: float
+    ProductCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        enabled:
+          type: boolean
+          example: false
+        hidden:
+          type: boolean
+          example: false
+        featured:
+          type: boolean
+          example: false
+        hot:
+          type: boolean
+          example: false
+        parent_id:
+          type: integer
+          nullable: true
+        og_image:
+          type: string
+          nullable: true
+        robots:
+          type: string
+          nullable: true
+        hits:
+          type: integer
+          example: 120
+        depth:
+          type: integer
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        stock:
+          type: integer
+          example: 15
+        ec_availability_overwrite:
+          type: boolean
+          example: false
+        out_of_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        low_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        medium_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        in_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        max_medium_stock_availability:
+          type: integer
+          nullable: true
+        max_low_stock_availability:
+          type: integer
+          nullable: true
+    ProductWarehouse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        ec_product_id:
+          type: integer
+          example: 8
+        ec_warehouse_id:
+          type: integer
+          example: 2
+        stock:
+          type: integer
+          example: 15
+        booked:
+          type: integer
+          example: 0
+        in_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        out_of_stock_ec_availability_id:
+          type: integer
+          nullable: true
+        expected_stock:
+          $ref: '#/components/schemas/ProductWarehouseExpectedStock'
+    ProductWarehouseExpectedStock:
+      type: array
+      items:
+        type: object
+        properties:
+          expected_date:
+            type: string
+            format: date-time
+            example: "2023-10-16 13:45:08"
+          expected_amount:
+            type: integer
+            example: 4
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
