@@ -13,6 +13,8 @@ tags:
     description: Management of product categories
   - name: ec-product-warehouse
     description: Management of product's stock
+  - name: ec-availability
+    description: Management of availabilities
 paths:
   /ec-product:
     get:
@@ -390,6 +392,46 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/MissingAbilityError'
+  /ec-availability:
+    get:
+      tags:
+        - ec-availability
+      summary: Get availabilities
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of items to return
+          required: true
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: enabled
+          schema:
+            type: boolean
+          description: To get enabled vailabilities
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  availabilities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Availability'
+        '400':
+          $ref: '#/components/responses/ValidatorError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/MissingAbilityError'
 security:
   - bearerAuth: []
 components:
@@ -406,16 +448,12 @@ components:
       properties:
         id:
           type: integer
+          minimum: 1
         enabled:
-          type: boolean
-        hidden:
-          type: boolean
-        featured:
-          type: boolean
-        hot:
           type: boolean
         discounted:
           type: boolean
+          example: false
         type:
           type: string
           enum:
@@ -429,31 +467,39 @@ components:
             - child
         ec_tax_type_id:
           type: integer
+          minimum: 1
           nullable: true
         ec_product_parent_id:
           type: integer
+          minimum: 1
           nullable: true
         ec_product_category_behavior:
           type: integer
           nullable: true
         sku:
           type: string
+          example: "UAP-AC-LR"
           nullable: true
         gtin:
           type: string
+          example: null
           nullable: true
         mpn:
           type: string
+          example: null
           nullable: true
         weight_unit:
           type: string
+          example: "kg"
           nullable: true
         dimensions_unit:
           type: string
+          example: "cm"
           nullable: true
         weight:
           type: number
           format: double
+          example: 0.969
           nullable: true
         advanced_weight:
           type: object
@@ -476,78 +522,101 @@ components:
           nullable: true
         units_in_box:
           type: string
+          example: null
           nullable: true
         stock_control_status:
           type: string
+          example: null
           nullable: true
         stock_control_mode:
           type: string
+          example: null
+        product_without_zero_price:
+          type: string
+          example: null
           nullable: true
         product_with_zero_price:
           type: string
+          example: null
           nullable: true
         send_low_stock_notification:
           type: boolean
         low_stock_notification:
           type: integer
+          example: null
           nullable: true
         purchase_quantity_steps:
           type: integer
+          example: null
           nullable: true
         minimum_purchase_quantity:
           type: integer
+          example: null
           nullable: true
         maximum_purchase_quantity:
           type: integer
+          example: null
           nullable: true
-        og_image:
-          type: string
-          nullable: true
-        robots:
-          type: string
-          nullable: true
-        hits:
-          type: integer
         ec_availability_overwrite:
           type: boolean
+          example: false
         out_of_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: null
         low_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: null
         medium_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: null
         in_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: null
         max_medium_stock_availability:
           type: integer
           nullable: true
+          example: null
         max_low_stock_availability:
           type: integer
           nullable: true
+          example: null
+        current_ec_availability_id:
+          type: integer
+          nullable: true
+          example: 4
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductMedia'
         translations:
           $ref: '#/components/schemas/ProductTranslations'
         categoryIds:
           type: array
           items:
             type: integer
+            minimum: 1
           example: [1,2]
         canonicalCategoryId:
           type: integer
+          minimum: 1
         manufacturerIds:
           type: array
           items:
             type: integer
+            minimum: 1
           example: [2]
-        media:
-          $ref: '#/components/schemas/ProductMedia'
         stock:
-          $ref: '#/components/schemas/ProductWarehouse'
-        prices:
-          $ref: '#/components/schemas/ProductPrice'
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductWarehouse'
+        final_prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductFinalPrice'
     ProductMedia:
       type: object
       properties:
@@ -603,58 +672,52 @@ components:
               type: string
               example: "A Greek Long Description"
               nullable: true
-    ProductPrice:
+    ProductFinalPrice:
       type: object
       properties:
         id:
           type: integer
-        enabled:
-          type: boolean
-        hidden:
-          type: boolean
-        value:
-          type: number
-          format: float
-        override_price:
-          type: number
-          format: float
-        enable_override_price:
-          type: boolean
-        order:
-          type: integer
-        ec_shopper_category_id:
-          type: integer
-          nullable: true
+          minimum: 1
+          example: 55013
         ec_product_id:
           type: integer
+          minimum: 1
+          example: 4297
+        ec_price_id:
+          type: integer
+          minimum: 1
+          example: 68425
+        ec_tax_category_id:
+          type: integer
+          minimum: 1
+          example: 1
+        ec_shopper_category_id:
+          type: integer
+          minimum: 1
+          nullable: true
         ec_currency_id:
           type: integer
-        currency_id:
+          minimum: 1
+          example: 34
+        tax_percentage:
           type: integer
-        tax_value:
-          type: number
-          format: float
+          example: 24
         base_price:
           type: number
           format: float
+          example: 35.399
         base_price_with_tax:
           type: number
           format: float
-        discount_value:
-          type: number
-          format: float
-        discount_value_with_tax:
-          type: number
-          format: float
-        discount_percentage:
-          type: number
-          format: float
+          example: 43.896
         final_price:
           type: number
           format: float
+          example: 35.999
         final_price_with_tax:
           type: number
           format: float
+          example: 43.896
     ProductCategory:
       type: object
       properties:
@@ -667,54 +730,72 @@ components:
         hidden:
           type: boolean
           example: false
-        featured:
-          type: boolean
-          example: false
-        hot:
-          type: boolean
-          example: false
         parent_id:
           type: integer
           nullable: true
-        og_image:
-          type: string
-          nullable: true
-        robots:
-          type: string
-          nullable: true
-        hits:
-          type: integer
-          example: 120
         depth:
           type: integer
           nullable: true
-        language:
-          type: string
-          nullable: true
-        stock:
-          type: integer
-          example: 15
         ec_availability_overwrite:
           type: boolean
           example: false
         out_of_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: 1
         low_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: 2
         medium_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: 3
         in_stock_ec_availability_id:
           type: integer
           nullable: true
+          example: 4
         max_medium_stock_availability:
           type: integer
           nullable: true
+          example: 5
         max_low_stock_availability:
           type: integer
           nullable: true
+          example: 6
+        ec_google_merchant_product_category_id:
+          type: integer
+          nullable: true
+        translations:
+          $ref: '#/components/schemas/ProductCategoryTranslations'
+    ProductCategoryTranslations:
+      type: object
+      properties:
+        locale:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "locale's title"
+            alias:
+              type: string
+              example: "locale-title"
+            description:
+              type: string
+              nullable: true
+              example: null
+            meta_description:
+              type: string
+              nullable: true
+              example: null
+            browser_page_title:
+              type: string
+              nullable: true
+              example: null
+            image:
+              type: string
+              nullable: true
+              example: null
     ProductWarehouse:
       type: object
       properties:
@@ -733,12 +814,6 @@ components:
         booked:
           type: integer
           example: 0
-        in_stock_ec_availability_id:
-          type: integer
-          nullable: true
-        out_of_stock_ec_availability_id:
-          type: integer
-          nullable: true
         expected_stock:
           $ref: '#/components/schemas/ProductWarehouseExpectedStock'
     ProductWarehouseExpectedStock:
@@ -753,6 +828,42 @@ components:
           expected_amount:
             type: integer
             example: 4
+    Availability:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          example: 1
+        enabled:
+          type: boolean
+          example: false
+        color:
+          type: string
+          nullable: true
+          example: "#DC3545"
+        class:
+          type: string
+          nullable: true
+          example: null
+        show_exected_date:
+          type: boolean
+          example: false
+        translations:
+          $ref: '#/components/schemas/AvailabilityTranslations'
+    AvailabilityTranslations:
+      type: object
+      properties:
+        locale:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "locale's title"
+            description:
+              type: string
+              nullable: true
+              example: null
   securitySchemes:
     bearerAuth:
       type: http
