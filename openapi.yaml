@@ -306,32 +306,40 @@ paths:
     post:
       tags:
         - ec-product-stock-price
-      summary: Update or create the stock/price of products with same sku
+      summary: Mass Update or create the stock/price of products with same sku
       description: |-
-        - SKU and At least one of (stock, shopperCategoryPrices) parameter is required on the request body.
+        - SKU and At least one of (stock, shopperCategoryPrices) parameter is required on the request body in each object.
         - On stock object you must provide $warehouseId => $stock pairs
         - On shopperCategoryPrices oject you must provide $shopperCategoryId => $price pairs. If price does not belong to a shopperCategoryId then you can provide '0' as $shopperCategoryId.
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                sku:
-                  type: string
-                  example: 'ATT-FF'
-                stock:
-                  type: object
-                  properties:
-                    warehouseId:
-                      type: integer
-                      example: 25
-                shopperCategoryPrices:
-                  type: object
-                  properties:
-                    shopperCategoryId:
-                      type: integer
-                      example: 150.40
+              type: array
+              items:
+                type: object
+                properties:
+                  sku:
+                    type: string
+                    example: 'AAA-BB-SKU'
+                  stock:
+                    type: object
+                    description: Warehouse stock levels, where keys are warehouse IDs and values are stock quantities.
+                    properties:
+                      warehouseId:
+                        type: integer
+                        example: 25
+                    example:
+                      "25": 100
+                  shopperCategoryPrices:
+                    type: object
+                    description: Prices by shopper category, where keys are shopper category IDs and values are prices.
+                    properties:
+                      shopperCategoryId:
+                        type: number
+                        example: 150.4
+                    example:
+                      "0": 150.4
               required:
                 - sku
               oneOf:
@@ -345,26 +353,29 @@ paths:
               schema:
                 type: object
                 properties:
-                  products:
-                    example: 2
-                  stock:
+                  "AAA-BB-SKU":
                     type: object
                     properties:
-                      updated:
-                        type: integer
+                      products:
                         example: 2
-                      created:
-                        type: integer
-                        example: 0
-                  price:
-                    type: object
-                    properties:
-                      updated:
-                        type: integer
-                        example: 0
-                      created:
-                        type: integer
-                        example: 2
+                      stock:
+                        type: object
+                        properties:
+                          updated:
+                            type: integer
+                            example: 2
+                          created:
+                            type: integer
+                            example: 0
+                      price:
+                        type: object
+                        properties:
+                          updated:
+                            type: integer
+                            example: 0
+                          created:
+                            type: integer
+                            example: 2
         '400':
           $ref: '#/components/responses/ValidatorError'
         '401':
