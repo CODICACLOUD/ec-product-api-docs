@@ -340,6 +340,12 @@ paths:
                         example: 150.4
                     example:
                       "0": 150.4
+                  fields:
+                    type: object
+                    description: Extra fields that will be updated or created on product
+                    properties:
+                      fieldSlug:
+                        example: "text //[1,4]"
               required:
                 - sku
               oneOf:
@@ -376,6 +382,9 @@ paths:
                           created:
                             type: integer
                             example: 2
+                      fields:
+                        type: boolean
+                        example: true
         '400':
           $ref: '#/components/responses/ValidatorError'
         '401':
