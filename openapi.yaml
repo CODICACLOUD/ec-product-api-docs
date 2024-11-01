@@ -306,7 +306,7 @@ paths:
     post:
       tags:
         - ec-product-stock-price
-      summary: Mass Update or create the stock/price of products with same sku
+      summary: Mass Update or create the stock/price/fields of products with same sku
       description: |-
         - SKU and At least one of (stock, shopperCategoryPrices) parameter is required on the request body in each object.
         - On stock object you must provide $warehouseId => $stock pairs
@@ -379,9 +379,6 @@ paths:
                           updated:
                             type: integer
                             example: 0
-                          created:
-                            type: integer
-                            example: 2
                       fields:
                         type: boolean
                         example: true
