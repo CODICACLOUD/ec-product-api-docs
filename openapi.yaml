@@ -310,7 +310,7 @@ paths:
       description: |-
         - SKU and At least one of (stock, shopperCategoryPrices) parameter is required on the request body in each object.
         - On stock object you must provide $warehouseId => $stock pairs
-        - On shopperCategoryPrices oject you must provide $shopperCategoryId => $price pairs. If price does not belong to a shopperCategoryId then you can provide '0' as $shopperCategoryId.
+        - On shopperCategoryPrices object you must provide $shopperCategoryId => $price pairs. If price does not belong to a shopperCategoryId then you can provide '0' as $shopperCategoryId.
       requestBody:
         content:
           application/json:
