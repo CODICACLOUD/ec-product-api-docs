@@ -308,6 +308,8 @@ paths:
         - ec-product-stock-price
       summary: Mass Update or create the stock/price/fields of products with same sku
       description: |-
+        This endpoint will only add the request data to a job.
+        The job is responsible to process the data and inform a webhook that has been set at global options.
         - SKU and At least one of (stock, shopperCategoryPrices) parameter is required on the request body in each object.
         - On stock object you must provide $warehouseId => $stock pairs
         - On shopperCategoryPrices object you must provide $shopperCategoryId => $price pairs. If price does not belong to a shopperCategoryId then you can provide '0' as $shopperCategoryId.
@@ -359,37 +361,18 @@ paths:
               schema:
                 type: object
                 properties:
-                  "AAA-BB-SKU":
-                    type: object
-                    properties:
-                      products:
-                        example: 2
-                      stock:
-                        type: object
-                        properties:
-                          updated:
-                            type: integer
-                            example: 2
-                          created:
-                            type: integer
-                            example: 0
-                      price:
-                        type: object
-                        properties:
-                          updated:
-                            type: integer
-                            example: 0
-                      fields:
-                        type: boolean
-                        example: true
+                  success:
+                    type: string
+                    example: "Added to queue."
+                  batch:
+                    type: integer
+                    example: 12
         '400':
           $ref: '#/components/responses/ValidatorError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/MissingAbilityError'
-        '422':
-          description: Error updating relations (categoryIds, manufacturerIds)
   /ec-product-warehouse:
     get:
       tags:
@@ -503,7 +486,7 @@ paths:
           name: enabled
           schema:
             type: boolean
-          description: To get enabled vailabilities
+          description: To get enabled availabilities
       responses:
         '200':
           description: Successful operation.
@@ -936,7 +919,7 @@ components:
           type: string
           nullable: true
           example: null
-        show_exected_date:
+        show_expected_date:
           type: boolean
           example: false
         translations:
